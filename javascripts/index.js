@@ -1,11 +1,4 @@
 
-//█████████████████████████████████████████████████
-//███▀▄▄▄░████▄░███████████▄░█████████████████▄░███
-//██░██████████░████▀▄▄▄▄▀██░▀▄▄▄▀██▀▄▄▄▄▀█████░███
-//██░███▄░▄████░████░████░██░████░██▀▄▄▄▄░█████░███
-//███▄▀▀▀▄███▀▀░▀▀██▄▀▀▀▀▄█▀░▄▀▀▀▄██▄▀▀▀▄░▀██▀▀░▀▀█
-//█████████████████████████████████████████████████
-
 // constants
 var MAX_BOUNCE = 7;
 
@@ -35,7 +28,7 @@ var audioCtx = new webkitAudioContext();
 
 /**▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
  * @function module:loading.loadSound
- * @desc  load an image file
+ * @desc  load an sound file
  *
  * @param {String}   path - file path
  * @param {Function} cb   - asynchronous callback function
@@ -118,28 +111,35 @@ STATES = {
 	BOUNCE:  4,
 	DEATH:   5,
 	EXTINCT: 6,
-	END:     7,
+	REMOVE:  7,
 	FINISH:  8
 };
 
+/**▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+ * @class Sprite
+ * @desc  Seed / branch element
+ *
+ * @param {Number} x - x coordinate
+ * @param {Number} y - y coordinate
+ */
 function Sprite(x, y) {
 	this.x = this.homeX = x || 0;
 	this.y = this.homeY = y || 0;
 	this.speedX = 10 * (Math.random() - 0.5);
 	this.speedY = 10 * (Math.random() - 0.5);
-	//----------------------
+
 	this.red   = 127;
 	this.green = 127;
 	this.blue  = 127;
 	this.alpha = 1;
-	//----------------------
+
 	this.state    = STATES.INIT;
 	this.parent   = null;
 	this.children = [null, null, null];
 	this.childCount = 0; // TODO: don't need this if children is an empty array
 	this.me       = 0;
 	this.bounce   = 0;
-	//----------------------
+
 	this.leaf   = document.createElementNS(SVG, "rect");
 	this.branch = document.createElementNS(SVG, "path");
 	this.branch.setAttribute("stroke", "black");
@@ -148,15 +148,20 @@ function Sprite(x, y) {
 	canvas.appendChild(this.branch);
 }
 
-Sprite.prototype.drawBranch = function(){
+/**▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+ * Draw branch element
+ */
+Sprite.prototype.drawBranch = function () {
 	this.branch.setAttribute("d", 
 		"M " + this.x + "," + this.y + " " +
 		"Q " + this.x + "," + this.parent.y + " " + this.parent.x + "," + this.parent.y
 	);
 };
 
-
-Sprite.prototype.init = function(){
+/**▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+ * init element
+ */
+Sprite.prototype.init = function () {
 	this.red   = Math.max(0, Math.min(this.red,   255));
 	this.green = Math.max(0, Math.min(this.green, 255));
 	this.blue  = Math.max(0, Math.min(this.blue,  255));
@@ -171,6 +176,9 @@ Sprite.prototype.init = function(){
 	this.leaf.setAttribute("transform", "translate(" + this.x + "," + this.y + ") ");
 };
 
+/**▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+ * compute element inertia and update position
+ */
 Sprite.prototype.inertia = function () {
 	var accelX = this.homeX - this.x;
 	var accelY = this.homeY - this.y;
@@ -182,6 +190,9 @@ Sprite.prototype.inertia = function () {
 	return Math.abs(accelX) + Math.abs(accelY);;
 };
 
+/**▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+ * compute element falling and update position
+ */
 Sprite.prototype.gravity = function () {
 	this.speedX = this.speedX * 0.9;
 	this.speedY = this.speedY + 0.9;
@@ -190,10 +201,11 @@ Sprite.prototype.gravity = function () {
 	this.leaf.setAttribute("transform", "translate(" + this.x + "," + this.y + ") ");
 };
 
+/**▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+ * animate element as a leaf with inertia
+ */
 Sprite.prototype.move = function () {
 	var absAccel = this.inertia();
-
-	// connection avec le parent (affichage de la branch)
 	if (this.parent != null) {this.drawBranch();}
 
 	var absSpeed = Math.abs(this.speedX) + Math.abs(this.speedY);
@@ -203,9 +215,11 @@ Sprite.prototype.move = function () {
 	} 
 };
 
-
-Sprite.prototype.duplicate = function(){
-	// si l'element est trop loin (sort de l'ecran), on le tue
+/**▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+ * animate element as a leaf (idle)
+ */
+Sprite.prototype.duplicate = function () {
+	// if element go off screen, kill it.
 	if ((this.x < -100) || (this.x > canvasWidth + 100)){
 		if (this.parent === null){
 			if (this.childCount === 0) nbSeed--;
@@ -214,10 +228,7 @@ Sprite.prototype.duplicate = function(){
 		this.state = STATES.DEATH;
 	}
 	
-	
-	//============detection de la death d'une racine=====
-	// si toute les branchs d'une racines sont deathes
-	// ou sont devenue des seeds, on tue la racine:
+	// if self is a root and all children are dead, kill self.
 	if ((this.parent === null) && (this.childCount === 3)){
 		if ((this.children[0] === null) && (this.children[1] === null) && (this.children[3] === null)) {
 			nbplante--
@@ -225,13 +236,10 @@ Sprite.prototype.duplicate = function(){
 		}
 	}
 	
-	//on tire un nombre aleatoire pour choisir
-	//l'evenement a effectuer:
+	// a random number to choose what is next action
 	var rand = (80 + nbelem * 6) * Math.random();
 	
-	//================duplicate:====================
-	// (creation d'une branch)
-	// si rand est compris entre 0 et 5
+	// new branch creation
 	if ((this.childCount < 3) && (rand >= 0) && (rand <= 5)){
 		var child = new Sprite(this.x, this.y);
 		animationArray.push(child);
@@ -239,18 +247,19 @@ Sprite.prototype.duplicate = function(){
 		child.parent = this;
 		nbelem++;
 	
-		//calcul de la direction de l'element:
+		// new child position
 		var posx = this.x + 80 * Math.random() - 40 + 40 * (this.childCount - 1);
 		var posy = this.y + 60 * Math.random() - (Math.random() < 0.2 ? 10 : 80);
 	
-		//init des variables du nouvel element:
+		// initialize child attribute
 		child.homeX = posx;
 		child.homeY = posy;
 		child.me    = this.childCount;
 		child.red   = this.red   + (Math.round(40 * Math.random()) - 20);
 		child.green = this.green + (Math.round(40 * Math.random()) - 20);
 		child.blue  = this.blue  + (Math.round(40 * Math.random()) - 20);
-		//on regarde si une nouvelle plante est cree:
+
+		// check if a new tree was created
 		if ((this.parent === null) && (this.childCount === 0)){
 			nbSeed--;
 			nbplante++;
@@ -258,77 +267,62 @@ Sprite.prototype.duplicate = function(){
 		this.childCount++;
 	}
 	
-	//=======================mouvement:=================
-	// on fait bouger la branch
-	// si rand est compris entre 6 et 10
+	// add inertia to element
 	if ((this.childCount === 0) && (this.parent !== null) && (rand >= 6) && (rand <= 10)){
 		this.speedX = 20 * (Math.random() - 0.5);
 		this.speedY = 20 * (Math.random() - 0.5);
 		this.state = STATES.MOVE;
 	}
 	
-	//================creation d'une seed:============
-	// si rand est compris entre 11 et 14
+	// element branch become a seed and fall to the ground
 	if ((this.childCount === 0) && (this.parent !== null) && (rand >= 11) && (rand <= 14)){
 		this.state = STATES.SEED;
 	}
 	
-	
-	//==================death de la branch:=============
-	//cas d'une simple branch:
-	if ((this.parent !== null) && ((20000 * Math.random()) < nbelem)){
+	// branch die
+	if ((this.parent !== null) && ((20000 * Math.random()) < nbelem)) {
 		this.state = STATES.DEATH;
 	}
-	//cas d'une racine:
+
+	// root
 	if ((this.parent === null) && (this.childCount > 0) && ((80000 * Math.random()) < nbelem)){
-		if (this.childCount === 0){
-			nbSeed--;
-		}
-		else{
-			nbplante--;
-		}
+		if (this.childCount === 0) nbSeed--;
+		else nbplante--;
 		this.state = STATES.DEATH;
 	}
 };
 	
-//█████████████████████████████████████████
-//██▀▄▄▄▀░██████████████████████▄░█████████
-//██▄▀▀▀▀███▀▄▄▄▄▀██▀▄▄▄▄▀██▀▄▄▄▀░█████████
-//███████░██░▄▄▄▄▄██░▄▄▄▄▄██░████░█████████
-//██░▄▀▀▀▄██▄▀▀▀▀▀██▄▀▀▀▀▀██▄▀▀▀▄░▀████████
-//█████████████████████████████████████████
-Sprite.prototype.seed = function(){
-	//creation d'une seed
+/**▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+ * animate element as a seed.
+ */
+Sprite.prototype.seed = function () {
+	// seed creation
 	this.parent.children[this.me] = null;
 	this.parent = null;
 	canvas.removeChild(this.branch);
 	this.state = STATES.BOUNCE;
 	
-	//init des variables:
+	// init trajectory values
 	this.speedX = 20 * (Math.random() - 0.5);;
-	this.speedY = -10; //on donne une legere pousse vers le haut
+	this.speedY = -10; // give a small push to the top
 
 	nbSeed++
 };
 
 
-
-
-//█████████████████████████████████████████████████
-//██▄░▄▄▄▀█████████████████████████████████████████
-//███░▀▀▀▄██▀▄▄▄▄▀██▄░██▄░██▄░▀▄▄▀██▀▄▄▄▀░██▀▄▄▄▄▀█
-//███░███░██░████░███░███░███░███░██░███████░▄▄▄▄▄█
-//██▀░▀▀▀▄██▄▀▀▀▀▄███▄▀▀▄░▀█▀░▀█▀░▀█▄▀▀▀▀▄██▄▀▀▀▀▀█
-//█████████████████████████████████████████████████
-Sprite.prototype.bounceSeed = function(){
+/**▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+ * animate element as a falling and bouncing seed.
+ */
+Sprite.prototype.bounceSeed = function () {
 	this.gravity();
 	
-	//collision (rebond sur le sol):
+	// bounce on floor
 	if (this.y > floor){
 		this.y = floor;
 		this.speedY = -0.7 * Math.abs(this.speedY);
 		this.bounce++
-		//faire un son:
+
+		// play collision sound
 		var vol = Math.abs(this.speedY);
 		var pan = (this.x - 350) / 4;
 		pan = 0.01 * Math.max(-100, Math.min(pan, 100));
@@ -338,13 +332,13 @@ Sprite.prototype.bounceSeed = function(){
 		maxSpeed = Math.max(maxSpeed, Math.abs(this.speedY));
 	}
 	
-	//si plus de 7 rebond : la seed est plantee
-	if (this.bounce > MAX_BOUNCE){
+	// stop movement when maximum bounce is reached
+	if (this.bounce > MAX_BOUNCE) {
 		this.homeX  = this.x;
 		this.homeY  = floor;
 		this.speedY = 0;
 		this.state  = STATES.DUPL;
-		// probabilite que la seed soit sterile:
+		// kill seed probability (to control total number of elements)
 		if (200 * Math.random() < (nbSeed + nbplante)){
 			this.state = STATES.DEATH;
 			nbSeed--
@@ -352,27 +346,21 @@ Sprite.prototype.bounceSeed = function(){
 	}
 };
 
-//█████████████████████████████████████████████████
-//██▄░▄▄▀████████████████████▀██████▄░█████████████
-//███░███░██▀▄▄▄▄▀██▀▄▄▄▄▀██▄░▄▄▄████░▀▄▄▀█████████
-//███░███░██░▄▄▄▄▄██▀▄▄▄▄░███░███████░███░█████████
-//██▀░▀▀▄███▄▀▀▀▀▀██▄▀▀▀▄░▀██▄▀▀▀▄██▀░▀█▀░▀████████
-//█████████████████████████████████████████████████
-/** kill self and all children */
-Sprite.prototype.death = function(){
+
+/**▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+ * kill self and all children
+ */
+Sprite.prototype.death = function () {
 	for (var i = 0, len = this.children.length; i < len; i++) {
 		if (this.children[i] !== null) this.children[i].state = STATES.DEATH;
 	}
 	this.state = STATES.EXTINCT;
 };
 
-//█████████████████████████████████████████████████████████
-//██▄░▄▄▄░███████████▀█████████▄█████████████████████▀█████
-//███░▀░████▄░██░▄██▄░▄▄▄████▄▄░████▄░▀▄▄▀██▀▄▄▄▀░██▄░▄▄▄██
-//███░█▄██████░░█████░█████████░█████░███░██░████████░█████
-//██▀░▀▀▀░██▀░██░▀███▄▀▀▀▄███▀▀░▀▀██▀░▀█▀░▀█▄▀▀▀▀▄███▄▀▀▀▄█
-//█████████████████████████████████████████████████████████
-Sprite.prototype.extinct = function(){
+/**▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+ * make element disapear by alpha fadeding out
+ */
+Sprite.prototype.extinct = function () {
 	this.alpha  = this.alpha * 0.95;
 	var color = "rgba(0,0,0," + this.alpha + ")";
 	this.leaf.setAttribute("stroke", color);
@@ -387,17 +375,14 @@ Sprite.prototype.extinct = function(){
 		if (this.parent !== null){
 			this.parent.children[this.me] = null;
 		}
-		this.state = STATES.END;
+		this.state = STATES.REMOVE;
 	}
 };
 
-//█████████████████████████████████
-//██▄░▄▄▄░██████████████▄░█████████
-//███░▀░████▄░▀▄▄▀██▀▄▄▄▀░█████████
-//███░█▄█████░███░██░████░█████████
-//██▀░▀▀▀░██▀░▀█▀░▀█▄▀▀▀▄░▀████████
-//█████████████████████████████████
-Sprite.prototype.end = function(){
+/**▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+ * remove element
+ */
+Sprite.prototype.remove = function () {
 	canvas.removeChild(this.leaf);
 	if (this.parent !== null) canvas.removeChild(this.branch);
 	this.state = STATES.FINISH;
@@ -405,13 +390,12 @@ Sprite.prototype.end = function(){
 	if (index !== -1) animationArray.splice(index, 1);
 };
 
-//█████████████████████████████████████████████████████████
-//████▄░███████████████▄█████████████████████▀█████████████
-//████░█░███▄░▀▄▄▀███▄▄░███▄░▀▄▀▀▄▀█▀▄▄▄▄▀██▄░▄▄▄███▀▄▄▄▄▀█
-//████░▀░████░███░█████░████░██░██░█▀▄▄▄▄░███░██████░▄▄▄▄▄█
-//██▀░▀█▀░▀█▀░▀█▀░▀██▀▀░▀▀█▀░▀█░▀█░█▄▀▀▀▄░▀██▄▀▀▀▄██▄▀▀▀▀▀█
-//█████████████████████████████████████████████████████████
-Sprite.prototype.animate = function(){
+/**▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+ * animate element
+ *
+ * TODO: assign directly the coresponding function to animate attribute
+ */
+Sprite.prototype.animate = function () {
 	switch(this.state){
 		case STATES.INIT    : this.init(); break;
 		case STATES.MOVE    : this.move(); break;
@@ -420,7 +404,7 @@ Sprite.prototype.animate = function(){
 		case STATES.BOUNCE  : this.bounceSeed(); break;
 		case STATES.DEATH   : this.death(); break;
 		case STATES.EXTINCT : this.extinct(); break;
-		case STATES.END     : this.end(); break;
+		case STATES.REMOVE  : this.remove(); break;
 		case STATES.FINISH  : break;
 	}
 };
@@ -431,6 +415,8 @@ Sprite.prototype.animate = function(){
 //███████░██░███████░▄▄▄▄▄███░███░██░▄▄▄▄▄█
 //██░▄▀▀▀▄██▄▀▀▀▀▄██▄▀▀▀▀▀██▀░▀█▀░▀█▄▀▀▀▀▀█
 //█████████████████████████████████████████
+
+// first seed creation
 animationArray[0] = new Sprite(canvasWidth / 2, floor);
 animationArray[0].red   = 230 + ~~(30 * Math.random());
 animationArray[0].green = 200 + ~~(30 * Math.random());
@@ -444,6 +430,7 @@ animationArray[0].blue  = 130 + ~~(30 * Math.random());
 //████░▀░████░███░█████░████░██░██░██████████░███▀██░████░██░████░███░███░█
 //██▀░▀█▀░▀█▀░▀█▀░▀██▀▀░▀▀█▀░▀█░▀█░███░░████▀░▀▀▀░██▄▀▀▀▀▄██▄▀▀▀▀▄███░▀▀▀▄█
 //██████████████████████████████████████████████████████████████████▀░▀████
+
 window.requestAnimFrame = (function () {
 	return  window.requestAnimationFrame
 		||	window.webkitRequestAnimationFrame
