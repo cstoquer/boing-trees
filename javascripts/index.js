@@ -442,13 +442,19 @@ window.requestAnimFrame = (function () {
 			};
 })();
 
+var captionSeeds = document.getElementById("caption-seeds");
+var captionPlant = document.getElementById("caption-plant");
+var captionArray = document.getElementById("caption-array");
+var captionElemt = document.getElementById("caption-elemt");
+var captionSpeed = document.getElementById("caption-speed");
+
 function drawFrame() {
 	for (var i in animationArray) animationArray[i].animate();
-	document.getElementById("caption-seeds").textContent = "seeds:" + nbSeed;
-	document.getElementById("caption-plant").textContent = "plant:" + nbplante;
-	document.getElementById("caption-array").textContent = "animation-array size:" + animationArray.length;
-	document.getElementById("caption-elemt").textContent = "graphic elements:" + nbelem;
-	document.getElementById("caption-speed").textContent = "max speed:" + maxSpeed.toFixed(2);
+	captionSeeds.textContent = "seeds:" + nbSeed;
+	captionPlant.textContent = "plant:" + nbplante;
+	captionArray.textContent = "animation-array size:" + animationArray.length;
+	captionElemt.textContent = "graphic elements:" + nbelem;
+	captionSpeed.textContent = "max speed:" + maxSpeed.toFixed(2);
 }
 
 function loopAnimation(currentTime) {
