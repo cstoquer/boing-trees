@@ -1,7 +1,10 @@
 
 // constants
 var MAX_BOUNCE = 7;
-
+var FRICTION   = 0.9;
+var LEAF_SIZE  = 10;
+var LEAF_HALF  = LEAF_SIZE / 2;
+var TOP_PUSH   = 10;
 
 // global variables
 var canvas = document.querySelector("svg");
@@ -167,10 +170,10 @@ Sprite.prototype.init = function () {
 	this.blue  = Math.max(0, Math.min(this.blue,  255));
 	this.state = STATES.MOVE;
 
-	this.leaf.setAttribute("x", -5);
-	this.leaf.setAttribute("y", -5);
-	this.leaf.setAttribute("width",  10);
-	this.leaf.setAttribute("height", 10);
+	this.leaf.setAttribute("x", -LEAF_HALF);
+	this.leaf.setAttribute("y", -LEAF_HALF);
+	this.leaf.setAttribute("width",  LEAF_SIZE);
+	this.leaf.setAttribute("height", LEAF_SIZE);
 	this.leaf.setAttribute("stroke", "black");
 	this.leaf.setAttribute("fill", "rgb(" + this.red + "," + this.green + "," + this.blue + ")");
 	this.leaf.setAttribute("transform", "translate(" + this.x + "," + this.y + ") ");
@@ -182,8 +185,8 @@ Sprite.prototype.init = function () {
 Sprite.prototype.inertia = function () {
 	var accelX = this.homeX - this.x;
 	var accelY = this.homeY - this.y;
-	this.speedX = this.speedX * 0.9 + accelX * 0.1;
-	this.speedY = this.speedY * 0.9 + accelY * 0.1;
+	this.speedX = this.speedX * FRICTION + accelX * 0.1;
+	this.speedY = this.speedY * FRICTION + accelY * 0.1;
 	this.x = this.x + this.speedX;
 	this.y = this.y + this.speedY;
 	this.leaf.setAttribute("transform", "translate(" + this.x + "," + this.y + ") ");
@@ -194,8 +197,8 @@ Sprite.prototype.inertia = function () {
  * compute element falling and update position
  */
 Sprite.prototype.gravity = function () {
-	this.speedX = this.speedX * 0.9;
-	this.speedY = this.speedY + 0.9;
+	this.speedX = this.speedX * FRICTION;
+	this.speedY = this.speedY + FRICTION;
 	this.x = this.x + this.speedX;
 	this.y = this.y + this.speedY;
 	this.leaf.setAttribute("transform", "translate(" + this.x + "," + this.y + ") ");
@@ -304,7 +307,7 @@ Sprite.prototype.seed = function () {
 	
 	// init trajectory values
 	this.speedX = 20 * (Math.random() - 0.5);;
-	this.speedY = -10; // give a small push to the top
+	this.speedY = -TOP_PUSH; // give a small push to the top
 
 	nbSeed++
 };
@@ -354,6 +357,7 @@ Sprite.prototype.death = function () {
 	for (var i = 0, len = this.children.length; i < len; i++) {
 		if (this.children[i] !== null) this.children[i].state = STATES.DEATH;
 	}
+	this.leaf.setAttribute("fill", "none");
 	this.state = STATES.EXTINCT;
 };
 
@@ -364,7 +368,6 @@ Sprite.prototype.extinct = function () {
 	this.alpha  = this.alpha * 0.95;
 	var color = "rgba(0,0,0," + this.alpha + ")";
 	this.leaf.setAttribute("stroke", color);
-	this.leaf.setAttribute("fill", "none");
 	this.branch.setAttribute("stroke", color);
 
 	this.inertia();
@@ -438,7 +441,7 @@ window.requestAnimFrame = (function () {
 		||	window.oRequestAnimationFrame
 		||	window.msRequestAnimationFrame
 		||	function (callback) {
-				window.setTimeout(callback, 1000 / 24);
+				window.setTimeout(callback, 1000 / 60);
 			};
 })();
 
