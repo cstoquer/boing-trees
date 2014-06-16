@@ -1,3 +1,3 @@
 boing-trees
 ===========
-see the (demo)[http://cstoquer.github.io/boing-trees/].
+see the demo [here](http://cstoquer.github.io/boing-trees/).
